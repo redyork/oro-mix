@@ -1,0 +1,12 @@
+#Project LENJ vars
+#main working dir
+lenj_dockerdir='/docker/oro/oro-docker-v2/'
+
+#email for letsencrypt
+lenj_email='yorkred@gmail.com'
+
+#main domain
+lenj_domain='dev.t00.space'
+
+#additional domain with -d prefix (for certbot command line)
+lenj_adddomains='www.dev.t00.space dev.oro31.t00.space dev.oro16.t00.space prod.oro31.t00.space prod.oro16.t00.space'

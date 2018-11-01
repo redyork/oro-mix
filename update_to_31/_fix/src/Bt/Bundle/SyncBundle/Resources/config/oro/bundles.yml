@@ -1,0 +1,2 @@
+bundles:
+    - { name: Bt\Bundle\SyncBundle\BtSyncBundle, priority: -245 }

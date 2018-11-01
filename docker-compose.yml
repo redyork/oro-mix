@@ -1,0 +1,107 @@
+version: "3.1"
+services:
+
+    mysql:
+      image: mysql:5.7
+      container_name: mysql
+      working_dir: /application
+      volumes:
+        - ./application:/application
+      env_file: .env
+      entrypoint:
+        sh -c "
+          echo 'CREATE DATABASE IF NOT EXISTS orocommerce; CREATE DATABASE IF NOT EXISTS orocommerce31; CREATE DATABASE IF NOT EXISTS demo16; CREATE DATABASE IF NOT EXISTS demo31;' > /docker-entrypoint-initdb.d/init.sql;
+          echo 'GRANT ALL PRIVILEGES ON orocommerce.* TO oro@`%`;  GRANT ALL PRIVILEGES ON orocommerce31.* TO oro@`%`;GRANT ALL PRIVILEGES ON demo16.* TO oro@`%`;GRANT ALL PRIVILEGES ON demo31.* TO oro@`%`;' >> /docker-entrypoint-initdb.d/init.sql;
+          /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+        "
+      networks:
+        oro_net:
+          ipv4_address: 10.5.0.10
+
+    webserver:
+      build: nginx
+      container_name: webserver
+      working_dir: /application
+      env_file: .env
+      volumes:
+        - ./application:/application
+        #- ./application_prod:/application_prod
+        - ./application/logs:/var/log/nginx
+        - ./conf/nginx/conf.d:/etc/nginx/conf.d
+        - ./application/data/www:/usr/share/nginx/html
+        - ./application/data/le:/etc/letsencrypt
+      ports:
+        - "80:80"
+        - "443:443"
+      networks:
+        oro_net:
+          ipv4_address: 10.5.0.15
+
+    oro:
+      build: oro
+      container_name: oro
+      working_dir: /application
+      env_file: .env
+      environment:
+        - PRFX=prod
+        - MYSQL_DATABASE=orocommerce
+      volumes:
+        - ./application:/application
+        - ./conf/php/php-ini-overrides-prod.ini:/etc/php/7.1/fpm/conf.d/99-overrides.ini
+      networks:
+        oro_net:
+          ipv4_address: 10.5.0.20
+
+    oro31:
+      build: oro
+      container_name: oro31
+      working_dir: /application
+      env_file: .env
+      environment:
+        - PRFX=prod31
+        - MYSQL_DATABASE=orocommerce31
+      volumes:
+        - ./application:/application
+        - ./conf/php/php-ini-overrides.ini:/etc/php/7.1/fpm/conf.d/99-overrides.ini
+      networks:
+        oro_net:
+          ipv4_address: 10.5.0.21
+
+    demo16:
+      build: oro
+      container_name: demo16
+      working_dir: /application
+      env_file: .env
+      environment:
+        - PRFX=demo16
+        - MYSQL_DATABASE=demo16
+      volumes:
+        - ./application:/application
+        - ./conf/php/php-ini-overrides.ini:/etc/php/7.1/fpm/conf.d/99-overrides.ini
+      networks:
+        oro_net:
+          ipv4_address: 10.5.0.22
+
+    demo31:
+      build: oro
+      container_name: demo31
+      working_dir: /application
+      env_file: .env
+      environment:
+        - PRFX=demo31
+        - MYSQL_DATABASE=demo31
+      volumes:
+        - ./application:/application
+        - ./conf/php/php-ini-overrides.ini:/etc/php/7.1/fpm/conf.d/99-overrides.ini
+      networks:
+        oro_net:
+          ipv4_address: 10.5.0.23
+
+networks:
+  docker-network:
+    driver: bridge
+  oro_net:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 10.5.0.0/24
